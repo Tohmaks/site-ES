@@ -1,0 +1,683 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Le Nucléaire : Enjeux, Risques et Solutions</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: #F5F5F4;
+            color: #1C1917;
+        }
+        
+        .tab-content {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.4s ease-in-out;
+        }
+        .tab-content.active {
+            display: block;
+            opacity: 1;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+
+        input[type=range] {
+            -webkit-appearance: none;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 24px;
+            width: 24px;
+            border-radius: 50%;
+            background: #EA580C;
+            cursor: pointer;
+            margin-top: -10px;
+            box-shadow: 0 0 5px rgba(0,0,0,0.2);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #D6D3D1;
+            border-radius: 2px;
+        }
+
+        .atom-circle {
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+    <!-- Chosen Palette: Warm Neutrals & Scientific Accents (Background: Stone #F5F5F4, Text: Stone #1C1917, Accents: Deep Blue #0369A1, Energy Orange #EA580C, Alert Red #BE123C) -->
+    <!-- Application Structure Plan: Tabbed Single Page Application (SPA).
+         1. "Fondamentaux": Defines nuclear energy and density (The 'Why'), enhanced with TTS for accessibility.
+         2. "Le Paradoxe": Focuses on Waste volume vs toxicity (The 'Problem'), enhanced with a Jargon Simplifier LLM feature.
+         3. "Temps & Risques": Interactive timeline and decay curves (The 'Constraint').
+         4. "Avenir & IA": Solutions, comparisons, and Gemini API integration for scenario analysis (The 'Solution').
+         Flow: Linear narrative from understanding -> problem -> implication -> solution, with LLM tools aiding comprehension and foresight.
+    -->
+    <!-- Visualization & Content Choices:
+         1. Fission Diagram (CSS): Inform -> Concept -> Styled Divs -> Simple visualization of splitting atoms without SVG.
+         2. Density Chart (Bar): Compare -> Efficiency -> Chart.js -> Shows massive energy density difference.
+         3. Waste Paradox (Bar): Compare -> Volume vs Toxicity -> Chart.js -> visualizes the inverse relationship.
+         4. Decay Chart (Line): Change -> Time -> Chart.js -> Demonstrates half-life concept.
+         5. Energy Radar (Radar): Compare -> Trade-offs -> Chart.js -> Multivariable comparison of energy sources.
+         6. AI Analysis (Text): Inform/Analyze -> Scenarios -> Gemini API -> Dynamic text generation based on user queries.
+         7. TTS Definition (Audio): Inform -> Core Definition -> Gemini TTS API -> Audio playback of text.
+         8. Jargon Simplifier (Text): Inform -> Complexity -> Gemini Flash API -> Simplified text explanation.
+         CONFIRMATION: NO SVG graphics used. NO Mermaid JS used.
+    -->
+</head>
+<body class="bg-stone-100 min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center">
+            <div class="mb-4 md:mb-0 text-center md:text-left">
+                <h1 class="text-2xl font-extrabold text-stone-800 tracking-tight">EXPOSÉ : LE NUCLÉAIRE</h1>
+                <p class="text-xs font-semibold text-orange-600 uppercase tracking-widest">Risques, Déchets & Solutions</p>
+            </div>
+            <nav class="flex space-x-2 overflow-x-auto max-w-full pb-2 md:pb-0">
+                <button onclick="switchTab('tab1')" id="btn-tab1" class="px-4 py-2 text-sm font-medium rounded-lg bg-stone-200 text-stone-600 hover:bg-stone-300 transition-colors whitespace-nowrap active-tab-btn">1. Fondamentaux</button>
+                <button onclick="switchTab('tab2')" id="btn-tab2" class="px-4 py-2 text-sm font-medium rounded-lg bg-stone-200 text-stone-600 hover:bg-stone-300 transition-colors whitespace-nowrap">2. Le Paradoxe</button>
+                <button onclick="switchTab('tab3')" id="btn-tab3" class="px-4 py-2 text-sm font-medium rounded-lg bg-stone-200 text-stone-600 hover:bg-stone-300 transition-colors whitespace-nowrap">3. Temps & Risques</button>
+                <button onclick="switchTab('tab4')" id="btn-tab4" class="px-4 py-2 text-sm font-medium rounded-lg bg-stone-200 text-stone-600 hover:bg-stone-300 transition-colors whitespace-nowrap">4. Avenir & IA</button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-5xl mx-auto px-4 py-8 w-full">
+
+        <!-- TAB 1: FONDAMENTAUX -->
+        <section id="tab1" class="tab-content active">
+            <div class="bg-white rounded-2xl shadow-sm p-6 mb-6 border-l-4 border-blue-600">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2">
+                    <h2 class="text-2xl font-bold text-stone-800 mb-2 sm:mb-0">Qu'est-ce que le nucléaire ?</h2>
+                    <button onclick="speakDefinition()" id="tts-button" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors text-sm flex items-center disabled:opacity-50 disabled:cursor-not-allowed">
+                        <span class="mr-2">✨</span>Écouter la définition
+                    </button>
+                </div>
+                <p id="core-definition" class="text-stone-600 leading-relaxed">
+                    Le nucléaire est une méthode de production d'électricité qui utilise la chaleur libérée par la fission des atomes (généralement d'uranium). C'est une énergie dense et décarbonée, mais qui produit des matières radioactives.
+                </p>
+                <audio id="tts-audio" class="hidden" controls></audio>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Visualisation CSS Fission -->
+                <div class="bg-white rounded-2xl shadow-sm p-6">
+                    <h3 class="text-lg font-bold text-stone-700 mb-4">Le Mécanisme de Fission</h3>
+                    <p class="text-sm text-stone-500 mb-6">Un neutron percute un noyau lourd, le brise, et libère une énergie colossale.</p>
+                    
+                    <div class="flex flex-col items-center justify-center space-y-4 bg-stone-50 p-6 rounded-xl border border-stone-200 h-64">
+                        <div class="flex items-center space-x-2 animate-pulse">
+                            <span class="text-xs font-bold text-stone-400">Neutron</span>
+                            <div class="w-3 h-3 bg-stone-800 rounded-full"></div>
+                            <span class="text-xl text-stone-400">➔</span>
+                            <div class="w-16 h-16 bg-orange-500 text-white atom-circle text-xl">U</div>
+                        </div>
+                        <div class="text-center">
+                            <span class="text-2xl font-black text-red-600 block mb-2">⚡ ÉNERGIE ⚡</span>
+                            <div class="flex justify-center space-x-8">
+                                <div class="w-10 h-10 bg-stone-400 text-white atom-circle text-xs">Déchet</div>
+                                <div class="w-10 h-10 bg-stone-400 text-white atom-circle text-xs">Déchet</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chart: Density -->
+                <div class="bg-white rounded-2xl shadow-sm p-6">
+                    <h3 class="text-lg font-bold text-stone-700 mb-2">Pourquoi l'utiliser ? (Densité)</h3>
+                    <p class="text-sm text-stone-500 mb-4">Comparaison de l'énergie produite par 1kg de matière.</p>
+                    <div class="chart-container">
+                        <canvas id="densityChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2: LE PARADOXE -->
+        <section id="tab2" class="tab-content">
+            <div class="bg-white rounded-2xl shadow-sm p-6 mb-6 border-l-4 border-orange-500">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2">
+                    <h2 class="text-2xl font-bold text-stone-800 mb-2 sm:mb-0">Le Paradoxe des Déchets</h2>
+                    <button onclick="simplifyJargon()" id="simplify-button" class="bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded-lg transition-colors text-sm flex items-center disabled:opacity-50 disabled:cursor-not-allowed">
+                        <span class="mr-2">✨</span>Simplifier le Paradoxe
+                    </button>
+                </div>
+                <p class="text-stone-600 leading-relaxed">
+                    Le grand défi du nucléaire réside dans la gestion de ses déchets. Le paradoxe est frappant : la grande majorité des déchets est peu dangereuse, tandis que la fraction la plus infime (les déchets de haute activité) concentre presque toute la radioactivité.
+                </p>
+                <div id="simplified-jargon" class="mt-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200 text-stone-700 text-sm italic hidden">
+                    <!-- Simplification LLM result appears here -->
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Interactive Cards -->
+                <div class="lg:col-span-1 space-y-4">
+                    <div class="bg-blue-50 p-4 rounded-xl border border-blue-100 cursor-pointer hover:shadow-md transition-all" onclick="updateWasteInfo('fma')">
+                        <div class="flex justify-between items-center">
+                            <h4 class="font-bold text-blue-800">FMA-VC</h4>
+                            <span class="text-xs bg-blue-200 text-blue-800 px-2 py-1 rounded">Volume Massif</span>
+                        </div>
+                        <p class="text-xs text-blue-600 mt-2">Faible et Moyenne Activité, Vie Courte. (Vêtements, outils). 300 ans.</p>
+                    </div>
+
+                    <div class="bg-red-50 p-4 rounded-xl border border-red-100 cursor-pointer hover:shadow-md transition-all" onclick="updateWasteInfo('ha')">
+                        <div class="flex justify-between items-center">
+                            <h4 class="font-bold text-red-800">HA-VL</h4>
+                            <span class="text-xs bg-red-200 text-red-800 px-2 py-1 rounded">Danger Extrême</span>
+                        </div>
+                        <p class="text-xs text-red-600 mt-2">Haute Activité, Vie Longue. (Résidus de combustible). 100 000+ ans.</p>
+                    </div>
+                    
+                    <div id="waste-detail-box" class="bg-stone-800 text-white p-4 rounded-xl text-sm mt-4 min-h-[100px]">
+                        Cliquez sur une catégorie ci-dessus pour voir les détails de gestion.
+                    </div>
+                </div>
+
+                <!-- Chart: Paradox -->
+                <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm p-6">
+                    <h3 class="text-lg font-bold text-stone-700 mb-2">Volume vs Radioactivité</h3>
+                    <p class="text-sm text-stone-500 mb-4">Le problème est concentré dans une toute petite quantité de matière.</p>
+                    <div class="chart-container">
+                        <canvas id="paradoxChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: TEMPS & RISQUES -->
+        <section id="tab3" class="tab-content">
+            <div class="bg-white rounded-2xl shadow-sm p-6 mb-6 border-l-4 border-red-600">
+                <h2 class="text-2xl font-bold text-stone-800 mb-2">Le Facteur Temps</h2>
+                <p class="text-stone-600 leading-relaxed">
+                    La radioactivité n'est pas éternelle, elle décroît. Cependant, pour certains éléments comme le Plutonium, cette décroissance prend des échelles de temps géologiques, bien au-delà des civilisations humaines.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Decay Chart -->
+                <div class="bg-white rounded-2xl shadow-sm p-6">
+                    <h3 class="text-lg font-bold text-stone-700 mb-2">La Décroissance Radioactive</h3>
+                    <p class="text-sm text-stone-500 mb-4">Pourcentage de radioactivité restante au fil des siècles.</p>
+                    <div class="chart-container">
+                        <canvas id="decayChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Time Slider Simulation -->
+                <div class="bg-white rounded-2xl shadow-sm p-6 flex flex-col justify-center">
+                    <h3 class="text-lg font-bold text-stone-700 mb-4">Simulateur d'Héritage</h3>
+                    <div class="bg-stone-50 p-6 rounded-xl border border-stone-200">
+                        <label class="block text-sm font-bold text-stone-600 mb-2">Années écoulées : <span id="year-display" class="text-orange-600 text-xl">0</span></label>
+                        <input type="range" id="timeSlider" min="0" max="10000" step="100" value="0" class="w-full mb-6">
+                        
+                        <div id="time-context" class="border-l-4 border-red-500 pl-4 py-2 bg-white rounded-r">
+                            <h4 class="font-bold text-red-600">Danger Immédiat</h4>
+                            <p class="text-sm text-stone-600 mt-1">Les déchets sont brûlants. Ils doivent être refroidis activement en piscine.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 4: AVENIR & IA -->
+        <section id="tab4" class="tab-content">
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold text-stone-800 mb-2">Solutions et Analyse Prospective</h2>
+                <p class="text-stone-600">
+                    Comment gérer ces risques ? L'enfouissement (Cigéo), le recyclage (MOX) et les alternatives renouvelables sont les options sur la table.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <!-- Radar Comparison -->
+                <div class="bg-white rounded-2xl shadow-sm p-6">
+                    <h3 class="text-lg font-bold text-stone-700 mb-4">Comparaison Énergétique</h3>
+                    <p class="text-sm text-stone-500 mb-2">Analyse multicritères des sources.</p>
+                    <div class="chart-container">
+                        <canvas id="radarChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Solution Cards -->
+                <div class="space-y-4">
+                    <div class="bg-white p-5 rounded-xl shadow-sm border-l-4 border-green-500">
+                        <h4 class="font-bold text-stone-800">Stockage Géologique (Cigéo)</h4>
+                        <p class="text-sm text-stone-600 mt-1">Enfouir les déchets HA-VL à 500m sous terre dans de l'argile imperméable pour 100 000 ans.</p>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl shadow-sm border-l-4 border-blue-500">
+                        <h4 class="font-bold text-stone-800">Recyclage (MOX)</h4>
+                        <p class="text-sm text-stone-600 mt-1">Réutiliser 96% du combustible (Uranium/Plutonium) pour refaire de l'énergie. Réduit le volume final.</p>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl shadow-sm border-l-4 border-stone-500">
+                        <h4 class="font-bold text-stone-800">Réacteurs Gen IV</h4>
+                        <p class="text-sm text-stone-600 mt-1">Futurs réacteurs capables de "brûler" les déchets à vie longue pour réduire leur durée de vie.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GEMINI API SCENARIO SECTION -->
+            <div class="bg-gradient-to-r from-stone-800 to-stone-700 rounded-2xl shadow-lg p-6 text-white">
+                <div class="flex items-center mb-4">
+                    <span class="text-2xl mr-3">✨</span>
+                    <h3 class="text-xl font-bold">Analyse de Scénario par IA</h3>
+                </div>
+                <p class="text-stone-300 text-sm mb-4">
+                    Posez une question sur l'avenir du nucléaire (ex: "Quelles conséquences si on arrête le nucléaire en 2035 ?"). L'IA analysera les impacts techniques et écologiques.
+                </p>
+                
+                <div class="flex flex-col md:flex-row gap-4">
+                    <input type="text" id="scenarioInput" class="flex-grow p-3 rounded-lg text-stone-900 focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="Entrez votre scénario ici...">
+                    <button onclick="analyzeScenario()" id="scenario-button" class="bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-6 rounded-lg transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed">
+                        Analyser
+                    </button>
+                </div>
+
+                <div id="ai-result" class="mt-6 bg-stone-900/50 p-4 rounded-lg min-h-[60px] text-sm text-stone-200 border border-stone-600">
+                    Les résultats de l'analyse apparaîtront ici...
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-stone-200 py-6 mt-auto">
+        <div class="max-w-6xl mx-auto px-4 text-center text-stone-500 text-sm">
+            <p>&copy; 2025 Exposé Interactif - Données à titre pédagogique (Source: ANDRA/AIEA)</p>
+        </div>
+    </footer>
+
+    <script>
+        const reportData = {
+            definitionText: "Le nucléaire est une méthode de production d'électricité qui utilise la chaleur libérée par la fission des atomes, généralement d'uranium. C'est une énergie dense et décarbonée, mais qui produit des matières radioactives.",
+            jargonToSimplify: "Le paradoxe des déchets nucléaires réside dans le fait que la Haute Activité (HA) ne représente que 0,2% du volume total, mais concentre plus de 95% de la radioactivité totale, nécessitant un confinement sur des milliers d'années (HA-VL).",
+            density: { labels: ['Uranium (1g)', 'Charbon (1g)', 'Pétrole (1g)'], values: [10000, 1, 1.5] },
+            waste: { volume: [90, 9.8, 0.2], toxicity: [0.1, 4, 96] },
+            decay: { labels: [0, 100, 300, 1000, 5000, 10000], cesium: [100, 10, 0.1, 0, 0, 0], plutonium: [100, 99, 97, 94, 85, 75] }
+        };
+
+        Chart.defaults.font.family = "'Outfit', sans-serif";
+        Chart.defaults.color = '#57534e';
+        
+        const chartOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom' },
+                tooltip: {
+                    backgroundColor: 'rgba(28, 25, 23, 0.9)',
+                    padding: 12,
+                    callbacks: {
+                        title: (items) => {
+                            const label = items[0].label;
+                            return Array.isArray(label) ? label.join(' ') : label;
+                        }
+                    }
+                }
+            }
+        };
+
+        function wrapLabel(str, maxLen = 15) {
+            if (str.length <= maxLen) return str;
+            const words = str.split(' ');
+            const lines = [];
+            let currentLine = words[0];
+            for (let i = 1; i < words.length; i++) {
+                if (currentLine.length + 1 + words[i].length <= maxLen) {
+                    currentLine += ' ' + words[i];
+                } else {
+                    lines.push(currentLine);
+                    currentLine = words[i];
+                }
+            }
+            lines.push(currentLine);
+            return lines;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initCharts();
+            switchTab('tab1');
+        });
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('nav button').forEach(btn => {
+                btn.classList.remove('bg-stone-800', 'text-white', 'shadow-md');
+                btn.classList.add('bg-stone-200', 'text-stone-600');
+            });
+
+            document.getElementById(tabId).classList.add('active');
+            const activeBtn = document.getElementById('btn-' + tabId);
+            activeBtn.classList.remove('bg-stone-200', 'text-stone-600');
+            activeBtn.classList.add('bg-stone-800', 'text-white', 'shadow-md');
+        }
+
+        function updateWasteInfo(type) {
+            const box = document.getElementById('waste-detail-box');
+            if (type === 'fma') {
+                box.innerHTML = `<strong class="text-blue-300">Gestion FMA-VC :</strong> Ces déchets sont compactés dans des fûts en béton ou en acier, puis stockés en surface dans des centres spécialisés (comme dans l'Aube en France). Ils redeviennent inoffensifs en 300 ans.`;
+                box.className = "bg-blue-900 text-white p-4 rounded-xl text-sm mt-4 min-h-[100px] transition-colors";
+            } else {
+                box.innerHTML = `<strong class="text-red-300">Gestion HA-VL :</strong> Ces déchets sont vitrifiés (mélangés à du verre en fusion), coulés dans des conteneurs en inox, et pour l'instant entreposés. Le projet Cigéo prévoit de les enfouir à 500m sous terre.`;
+                box.className = "bg-red-900 text-white p-4 rounded-xl text-sm mt-4 min-h-[100px] transition-colors";
+            }
+        }
+
+        document.getElementById('timeSlider').addEventListener('input', (e) => {
+            const year = parseInt(e.target.value);
+            document.getElementById('year-display').innerText = year;
+            const ctx = document.getElementById('time-context');
+            
+            if (year < 100) {
+                ctx.className = "border-l-4 border-red-500 pl-4 py-2 bg-white rounded-r";
+                ctx.innerHTML = `<h4 class="font-bold text-red-600">Danger Extrême</h4><p class="text-sm text-stone-600">Forte chaleur et radioactivité mortelle.</p>`;
+            } else if (year < 500) {
+                ctx.className = "border-l-4 border-orange-500 pl-4 py-2 bg-white rounded-r";
+                ctx.innerHTML = `<h4 class="font-bold text-orange-600">Décroissance</h4><p class="text-sm text-stone-600">Les produits à vie courte (Césium) disparaissent. Les déchets tiédissent.</p>`;
+            } else {
+                ctx.className = "border-l-4 border-stone-500 pl-4 py-2 bg-white rounded-r";
+                ctx.innerHTML = `<h4 class="font-bold text-stone-600">Héritage Géologique</h4><p class="text-sm text-stone-600">Seuls les actinides (Plutonium) restent. Le danger est moindre mais dure des millénaires.</p>`;
+            }
+        });
+
+        function initCharts() {
+            new Chart(document.getElementById('densityChart'), {
+                type: 'bar',
+                data: {
+                    labels: reportData.density.labels.map(l => wrapLabel(l)),
+                    datasets: [{
+                        label: 'Énergie Relative',
+                        data: reportData.density.values,
+                        backgroundColor: ['#EA580C', '#44403C', '#78716C'],
+                        borderRadius: 6
+                    }]
+                },
+                options: { ...chartOptions, scales: { y: { type: 'logarithmic', display: false }, x: { grid: { display: false } } } }
+            });
+
+            new Chart(document.getElementById('paradoxChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['FMA (Vie Courte)', 'MA (Vie Longue)', 'HA (Haute Activité)'].map(l => wrapLabel(l)),
+                    datasets: [
+                        { label: 'Volume (%)', data: reportData.waste.volume, backgroundColor: '#0369A1', borderRadius: 4 },
+                        { label: 'Radioactivité (%)', data: reportData.waste.toxicity, backgroundColor: '#BE123C', borderRadius: 4 }
+                    ]
+                },
+                options: { ...chartOptions, scales: { y: { type: 'logarithmic', title: {display: true, text: 'Échelle Logarithmique'} } } }
+            });
+
+            new Chart(document.getElementById('decayChart'), {
+                type: 'line',
+                data: {
+                    labels: reportData.decay.labels,
+                    datasets: [
+                        { label: 'Produits Fission', data: reportData.decay.cesium, borderColor: '#F59E0B', backgroundColor: 'rgba(245, 158, 11, 0.1)', fill: true, tension: 0.4 },
+                        { label: 'Plutonium (HA)', data: reportData.decay.plutonium, borderColor: '#BE123C', borderDash: [5, 5], fill: false, tension: 0.4 }
+                    ]
+                },
+                options: { ...chartOptions, scales: { y: { min: 0, max: 100 } } }
+            });
+
+            new Chart(document.getElementById('radarChart'), {
+                type: 'radar',
+                data: {
+                    labels: ['Bas Carbone', 'Faible Coût', 'Gestion Déchets', 'Sûreté', 'Pilotable'].map(l => wrapLabel(l)),
+                    datasets: [
+                        { label: 'Nucléaire', data: [95, 70, 20, 50, 95], borderColor: '#0369A1', backgroundColor: 'rgba(3, 105, 161, 0.2)' },
+                        { label: 'Charbon', data: [10, 80, 60, 70, 90], borderColor: '#44403C', backgroundColor: 'rgba(68, 64, 60, 0.2)' },
+                        { label: 'Solaire', data: [95, 60, 80, 90, 30], borderColor: '#EA580C', backgroundColor: 'rgba(234, 88, 12, 0.2)' }
+                    ]
+                },
+                options: { ...chartOptions, scales: { r: { suggestedMin: 0, suggestedMax: 100 } } }
+            });
+        }
+
+        // --- GEMINI CORE CONFIG ---
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const apiKey = "";
+        const FLASH_MODEL = 'gemini-2.5-flash-preview-09-2025';
+        const TTS_MODEL = 'gemini-2.5-flash-preview-tts';
+
+        // --- API Helper for exponential backoff (retry logic) ---
+        async function fetchWithRetry(url, options, maxRetries = 3) {
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    const response = await fetch(url, options);
+                    if (response.ok) return response;
+                    if (response.status === 429 && i < maxRetries - 1) {
+                        const delay = Math.pow(2, i) * 1000 + Math.random() * 1000;
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                    } else {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                } catch (error) {
+                    if (i === maxRetries - 1) throw error;
+                    const delay = Math.pow(2, i) * 1000 + Math.random() * 1000;
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                }
+            }
+        }
+
+        // --- FEATURE 1: TTS - Text to Speech ---
+
+        function base64ToArrayBuffer(base64) {
+            const binaryString = window.atob(base64);
+            const len = binaryString.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            return bytes.buffer;
+        }
+
+        function pcmToWav(pcm16, sampleRate) {
+            const numChannels = 1;
+            const numSamples = pcm16.length;
+            const buffer = new ArrayBuffer(44 + numSamples * 2);
+            const view = new DataView(buffer);
+
+            // RIFF chunk descriptor
+            writeString(view, 0, 'RIFF');
+            view.setUint32(4, 36 + numSamples * 2, true);
+            writeString(view, 8, 'WAVE');
+            // FMT sub-chunk
+            writeString(view, 12, 'fmt ');
+            view.setUint32(16, 16, true);
+            view.setUint16(20, 1, true); // PCM = 1
+            view.setUint16(22, numChannels, true);
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, sampleRate * numChannels * 2, true);
+            view.setUint16(32, numChannels * 2, true);
+            view.setUint16(34, 16, true);
+            // Data sub-chunk
+            writeString(view, 36, 'data');
+            view.setUint32(40, numSamples * 2, true);
+
+            // Write PCM data
+            let offset = 44;
+            for (let i = 0; i < numSamples; i++) {
+                view.setInt16(offset, pcm16[i], true);
+                offset += 2;
+            }
+
+            return new Blob([view], { type: 'audio/wav' });
+        }
+
+        function writeString(view, offset, string) {
+            for (let i = 0; i < string.length; i++) {
+                view.setUint8(offset + i, string.charCodeAt(i));
+            }
+        }
+
+        async function speakDefinition() {
+            const textToSpeak = reportData.definitionText;
+            const ttsButton = document.getElementById('tts-button');
+            const audioEl = document.getElementById('tts-audio');
+            
+            ttsButton.disabled = true;
+            ttsButton.innerHTML = `<span class="mr-2">...</span>Chargement audio`;
+
+            try {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/${TTS_MODEL}:generateContent?key=${apiKey}`;
+                const payload = {
+                    contents: [{ parts: [{ text: `Dites avec un ton informatif et calme: ${textToSpeak}` }] }],
+                    generationConfig: {
+                        responseModalities: ["AUDIO"],
+                        speechConfig: {
+                            voiceConfig: { prebuiltVoiceConfig: { voiceName: "Charon" } }
+                        }
+                    }
+                };
+                
+                const response = await fetchWithRetry(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+                const part = result?.candidates?.[0]?.content?.parts?.[0];
+                const audioData = part?.inlineData?.data;
+                const mimeType = part?.inlineData?.mimeType;
+
+                if (audioData && mimeType && mimeType.startsWith("audio/")) {
+                    const rateMatch = mimeType.match(/rate=(\d+)/);
+                    const sampleRate = rateMatch ? parseInt(rateMatch[1], 10) : 24000;
+                    
+                    const pcmData = base64ToArrayBuffer(audioData);
+                    const pcm16 = new Int16Array(pcmData);
+                    const wavBlob = pcmToWav(pcm16, sampleRate);
+                    const audioUrl = URL.createObjectURL(wavBlob);
+
+                    audioEl.src = audioUrl;
+                    audioEl.classList.remove('hidden');
+                    audioEl.play();
+                } else {
+                    console.error("TTS failed or returned unexpected data:", result);
+                    ttsButton.innerHTML = `<span class="mr-2">❌</span>Erreur Audio`;
+                    await new Promise(resolve => setTimeout(resolve, 3000));
+                }
+            } catch (error) {
+                console.error("TTS API call failed:", error);
+                ttsButton.innerHTML = `<span class="mr-2">❌</span>Erreur TTS`;
+                await new Promise(resolve => setTimeout(resolve, 3000));
+            } finally {
+                ttsButton.innerHTML = `<span class="mr-2">✨</span>Écouter la définition`;
+                ttsButton.disabled = false;
+            }
+        }
+
+
+        // --- FEATURE 2: LLM - Jargon Simplifier ---
+
+        async function simplifyJargon() {
+            const simplifyButton = document.getElementById('simplify-button');
+            const resultDiv = document.getElementById('simplified-jargon');
+            const prompt = reportData.jargonToSimplify;
+
+            simplifyButton.disabled = true;
+            resultDiv.classList.remove('hidden');
+            resultDiv.innerHTML = `<span class="animate-pulse">L'IA simplifie le jargon...</span>`;
+
+            try {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/${FLASH_MODEL}:generateContent?key=${apiKey}`;
+                
+                const payload = {
+                    contents: [{ parts: [{ text: `Expliquez le texte suivant en une seule phrase courte et simple, comme si vous parliez à un enfant de 8 ans. N'ajoutez pas d'introduction ou de conclusion. Le texte à simplifier est : "${prompt}"` }] }],
+                    systemInstruction: { parts: [{ text: "Vous êtes un expert en pédagogie, vous simplifiez des concepts complexes en une seule phrase percutante, sans aucune phrase de transition." }] }
+                };
+
+                const response = await fetchWithRetry(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+                const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "Erreur de simplification.";
+                
+                resultDiv.innerHTML = `<p class="font-bold">En très simple :</p><p>${text}</p>`;
+
+            } catch (error) {
+                console.error("Jargon Simplifier API call failed:", error);
+                resultDiv.innerHTML = `<span class="text-red-600">Erreur : Impossible de simplifier le jargon.</span>`;
+            } finally {
+                simplifyButton.disabled = false;
+                simplifyButton.innerHTML = `<span class="mr-2">✨</span>Simplifier le Paradoxe`;
+            }
+        }
+
+        // --- FEATURE 3: LLM - Scenario Analysis ---
+
+        async function analyzeScenario() {
+            const input = document.getElementById('scenarioInput');
+            const resultDiv = document.getElementById('ai-result');
+            const scenarioButton = document.getElementById('scenario-button');
+            const prompt = input.value.trim();
+
+            if (!prompt) return;
+
+            scenarioButton.disabled = true;
+            resultDiv.innerHTML = `<span class="animate-pulse">Analyse en cours par l'IA...</span>`;
+
+            try {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/${FLASH_MODEL}:generateContent?key=${apiKey}`;
+
+                const response = await fetchWithRetry(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: `Analyse ce scénario énergétique (nucléaire/déchets) de façon objective, technique et concise (max 100 mots) en français : ${prompt}` }] }],
+                        tools: [{ "google_search": {} }]
+                    })
+                });
+
+                const data = await response.json();
+                const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "Erreur d'analyse.";
+                const sources = data.candidates?.[0]?.groundingMetadata?.groundingAttributions || [];
+
+                let html = `<p>${text}</p>`;
+                if (sources.length > 0) {
+                    html += `<div class="mt-2 pt-2 border-t border-stone-600 text-xs text-stone-400">Sources: ${sources.map(s => s.web?.title).filter(Boolean).join(', ')}</div>`;
+                }
+                resultDiv.innerHTML = html;
+
+            } catch (error) {
+                resultDiv.innerHTML = "Erreur de connexion à l'IA.";
+                console.error(error);
+            } finally {
+                scenarioButton.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
